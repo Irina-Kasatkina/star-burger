@@ -143,4 +143,4 @@ cython_debug/
 
 # This project
 .parcel-cache/
-run-parcel.bat
+start-parcel.bat
