@@ -3,6 +3,7 @@ import json
 import phonenumbers
 from django.http import JsonResponse
 from django.templatetags.static import static
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -74,20 +75,49 @@ def register_order(request):
         if not phonenumbers.is_valid_number(phonenumber):
             raise phonenumbers.NumberParseException
 
+        products, quantities = [], []
+        for product_details in order_details['products']:
+            quantity = product_details['quantity']
+            if quantity > 0:
+                products.append(Product.objects.get(pk=product_details['product']))
+                quantities.append(quantity)
+
+        if not quantities:
+            raise TypeError
+
         order = Order.objects.create(
             firstname=order_details['firstname'].strip().title(),
             lastname=order_details['lastname'].strip().title(),
             phonenumber=phonenumber,
             address=order_details['address'].strip()
         )
-        for product_details in order_details['products']:
-            quantity = product_details['quantity']
-            if quantity > 0:
-                product = Product.objects.get(pk=product_details['product'])
-                OrderItem.objects.create(order=order, product=product, quantity=quantity)
-        return Response(order_details)
-    except ValueError:
-        return JsonResponse({'error': 'Неправильно заполнен заказ'})
+
+        for product, quantity in zip(products, quantities):
+            OrderItem.objects.create(order=order, product=product, quantity=quantity)
+
+        print("Всё OK")
+        return Response(order_details, status=status.HTTP_200_OK)
+
     except phonenumbers.NumberParseException:
-        return JsonResponse({'error': 'Неправильно заполнен номер телефона'})
-    return JsonResponse({})
+        print('phonenumbers.NumberParseException')
+        return Response({"error": "Неправильно заполнен номер телефона"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    except KeyError as error:
+        field = str(error).strip("'")
+        print('KeyError', error)
+        return Response({"error": f"{field}: Обязательное поле."}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    except TypeError as error:
+        print('TypeError', error)
+        types = {
+            str: "products: Ожидался list со значениями, но был получен 'str'",
+            type(None): "products: Это поле не может быть пустым.",
+            list: "products: Этот список не может быть пустым.",
+        }
+        message = types.get(type(order_details['products']), error)
+        return Response({"error": message}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+    except ValueError:
+        print('ValueError', error)
+        return Response({"error": "Неправильно заполнен заказ"}, status=status.HTTP_406_NOT_ACCEPTABLE)
+    return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
