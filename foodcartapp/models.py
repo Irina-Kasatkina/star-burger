@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Restaurant(models.Model):
@@ -43,8 +44,8 @@ class ProductCategory(models.Model):
     )
 
     class Meta:
-        verbose_name = 'категория'
-        verbose_name_plural = 'категории'
+        verbose_name = 'категория товаров'
+        verbose_name_plural = 'категории товаров'
 
     def __str__(self):
         return self.name
@@ -121,3 +122,48 @@ class RestaurantMenuItem(models.Model):
 
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
+
+
+class Order(models.Model):
+    """Заказ."""
+
+    created = models.DateTimeField('время создания', auto_now_add=True, db_index=True)
+    firstname = models.CharField('имя', max_length=255)
+    lastname = models.CharField('фамилия', max_length=255, db_index=True)
+    phonenumber = PhoneNumberField('телефон', max_length=255, unique=True, db_index=True)
+    address = models.CharField('адрес', max_length=255)
+
+    class Meta:
+        ordering = ['-created']
+        verbose_name = 'заказ'
+        verbose_name_plural = 'заказы'
+
+    def __str__(self):
+        return f'{self.id}. {self.created} {self.firstname} {self.lastname}, телефон {self.phonenumber}'
+
+
+class OrderItem(models.Model):
+    """Элемент заказа."""
+
+    order = models.ForeignKey(
+        Order,
+        related_name='products',
+        verbose_name='заказ',
+        on_delete=models.CASCADE
+    )
+
+    product = models.ForeignKey(
+        Product,
+        related_name='order_products',
+        verbose_name='товар в заказе',        
+        on_delete=models.CASCADE
+    )
+    quantity = models.PositiveIntegerField(
+        'количество',
+        default=1,
+        validators=[MinValueValidator(1),]
+    )
+
+    class Meta:
+        verbose_name = 'элемент заказа'
+        verbose_name_plural = 'элементы заказа'

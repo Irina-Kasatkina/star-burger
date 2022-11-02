@@ -1,7 +1,11 @@
+import json
+
+import phonenumbers
 from django.http import JsonResponse
 from django.templatetags.static import static
 
-
+from .models import Order
+from .models import OrderItem
 from .models import Product
 
 
@@ -58,5 +62,27 @@ def product_list_api(request):
 
 
 def register_order(request):
-    # TODO это лишь заглушка
+    try:
+        order_details = json.loads(request.body.decode())
+
+        phonenumber = order_details['phonenumber']
+        phonenumber = phonenumbers.parse(phonenumber, 'RU')
+        if not phonenumbers.is_valid_number(phonenumber):
+            raise phonenumbers.NumberParseException
+
+        order = Order.objects.create(
+            firstname=order_details['firstname'].strip().title(),
+            lastname=order_details['lastname'].strip().title(),
+            phonenumber=phonenumber,
+            address=order_details['address'].strip()
+        )
+        for product_details in order_details['products']:
+            quantity = product_details['product']
+            if quantity > 0:
+                product = Product.objects.get(pk=product_details['product'])
+                OrderItem.objects.create(order=order, product=product, quantity=quantity)
+    except ValueError:
+        return JsonResponse({'error': 'Неправильно заполнен заказ'})
+    except phonenumbers.NumberParseException:
+        return JsonResponse({'error': 'Неправильно заполнен номер телефона'})
     return JsonResponse({})
