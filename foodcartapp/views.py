@@ -63,61 +63,101 @@ def product_list_api(request):
         'indent': 4,
     })
 
+def validate_order_datails(raw_order):
+    verified_order = {}
+
+    keys = ["products", "firstname", "lastname", "phonenumber", "address"]
+    bad_fields = [key for key in keys if key not in raw_order]
+    if bad_fields:
+        return None, f"{', '.join(bad_fields)}: Обязательное поле."
+
+    bad_fields = [key for key in keys if raw_order[key] is None]
+    if bad_fields:
+        return None, f"{', '.join(bad_fields)}: Это поле не может быть пустым."
+
+    if not isinstance(raw_order["products"], list):
+        return None, f"products: Ожидался list со значениями, но было получено {raw_order['products']}."
+    
+    if not raw_order["products"]:
+        return None, "products: Этот список не может быть пустым."
+
+    verified_order["products"] = []
+    for product_details in raw_order["products"]:
+        if not isinstance(product_details["quantity"], int):
+            return None, f"quantity: Ожидалось значение типа int, но было получено {product_details['quantity']}."
+
+        if product_details["quantity"] < 1:
+            return None, f"quantity: Ожидалось положительное число, но было получено {product_details['quantity']}."
+
+        if not isinstance(product_details["product"], int):
+            return None, f"product: Ожидалось значение типа int, но было получено {product_details['product']}."
+
+        if product_details["product"] < 1:
+            return None, f"product: Ожидалось положительное число, но было получено {product_details['product']}."
+
+        try:
+            product = Product.objects.get(pk=product_details["product"])
+        except Product.DoesNotExist:
+            return None, 'products: Недопустимый первичный ключ ' "'" f'{product_details["product"]}' "'."
+
+        verified_order["products"].append(
+            {
+                "product": product,
+                "quantity": product_details["quantity"]
+            }
+        )
+
+    keys = ["firstname", "lastname", "phonenumber", "address"]
+    bad_fields = [key for key in keys if not isinstance(raw_order[key], str)]
+    if bad_fields:
+        return None, f"{', '.join(bad_fields)}: Not a valid string."
+
+    firstname = raw_order["firstname"].strip()
+    if not firstname:
+        return None, "firstname: Эта строка не может быть пустой."
+
+    verified_order["firstname"] = firstname
+
+    lastname = raw_order["lastname"].strip()
+    if not lastname:
+        return None, "lastname: Эта строка не может быть пустой."
+
+    verified_order["lastname"] = lastname
+
+    phonenumber = raw_order["phonenumber"].strip()
+    if not phonenumber:
+        return None, "phonenumber: Эта строка не может быть пустой."
+
+    phonenumber = phonenumbers.parse(phonenumber, 'RU')
+    if not phonenumbers.is_valid_number(phonenumber):
+        return None, "phonenumber: Введен некорректный номер телефона."
+
+    verified_order["phonenumber"] = phonenumber
+
+    address = raw_order["address"].strip()
+    if not address:
+        return None, "address: Эта строка не может быть пустой."
+
+    verified_order["address"] = address
+    return verified_order, None
+
 
 @api_view(['POST'])
 def register_order(request):
-    try:
-        order_details = request.data
-        print(request.data)
+    raw_order = request.data
 
-        phonenumber = order_details['phonenumber']
-        phonenumber = phonenumbers.parse(phonenumber, 'RU')
-        if not phonenumbers.is_valid_number(phonenumber):
-            raise phonenumbers.NumberParseException
+    verified_order, order_error = validate_order_datails(raw_order)
+    if order_error:
+        return Response({"error": order_error}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        products, quantities = [], []
-        for product_details in order_details['products']:
-            quantity = product_details['quantity']
-            if quantity > 0:
-                products.append(Product.objects.get(pk=product_details['product']))
-                quantities.append(quantity)
+    order = Order.objects.create(
+        firstname=verified_order["firstname"],
+        lastname=verified_order["lastname"],
+        phonenumber=verified_order["phonenumber"],
+        address=verified_order["address"]
+    )
 
-        if not quantities:
-            raise TypeError
+    for product in verified_order["products"]:
+        OrderItem.objects.create(order=order, product=product["product"], quantity=product["quantity"])
 
-        order = Order.objects.create(
-            firstname=order_details['firstname'].strip().title(),
-            lastname=order_details['lastname'].strip().title(),
-            phonenumber=phonenumber,
-            address=order_details['address'].strip()
-        )
-
-        for product, quantity in zip(products, quantities):
-            OrderItem.objects.create(order=order, product=product, quantity=quantity)
-
-        print("Всё OK")
-        return Response(order_details, status=status.HTTP_200_OK)
-
-    except phonenumbers.NumberParseException:
-        print('phonenumbers.NumberParseException')
-        return Response({"error": "Неправильно заполнен номер телефона"}, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-    except KeyError as error:
-        field = str(error).strip("'")
-        print('KeyError', error)
-        return Response({"error": f"{field}: Обязательное поле."}, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-    except TypeError as error:
-        print('TypeError', error)
-        types = {
-            str: "products: Ожидался list со значениями, но был получен 'str'",
-            type(None): "products: Это поле не может быть пустым.",
-            list: "products: Этот список не может быть пустым.",
-        }
-        message = types.get(type(order_details['products']), error)
-        return Response({"error": message}, status=status.HTTP_406_NOT_ACCEPTABLE)
-
-    except ValueError:
-        print('ValueError', error)
-        return Response({"error": "Неправильно заполнен заказ"}, status=status.HTTP_406_NOT_ACCEPTABLE)
-    return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
+    return Response(raw_order, status=status.HTTP_200_OK)
