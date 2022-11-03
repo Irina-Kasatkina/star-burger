@@ -79,7 +79,7 @@ class OrderItemSerializer(ModelSerializer):
 
 
 class OrderSerializer(ModelSerializer):
-    products = OrderItemSerializer(many=True, allow_empty=False)
+    products = OrderItemSerializer(many=True, allow_empty=False, write_only=True)
 
     class Meta:
         model = Order
@@ -90,11 +90,6 @@ class OrderSerializer(ModelSerializer):
         if not phonenumbers.is_valid_number(value):
             raise ValidationError("Введен некорректный номер телефона.")
         return value
-
-    # def validate_products(self, value):
-    #     if not value:
-    #         raise ValidationError("This list cannot be empty")
-    #     return value
 
 
 @api_view(['POST'])
@@ -113,4 +108,4 @@ def register_order(request):
     products = [OrderItem(order=order, **fields) for fields in products_fields]
     OrderItem.objects.bulk_create(products)
 
-    return Response({"order_id": order.id})
+    return Response(OrderSerializer(instance=order).data)
