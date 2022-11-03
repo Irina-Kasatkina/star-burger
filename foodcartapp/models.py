@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -158,10 +158,11 @@ class OrderItem(models.Model):
         verbose_name='товар в заказе',        
         on_delete=models.CASCADE
     )
+
     quantity = models.PositiveIntegerField(
         'количество',
         default=1,
-        validators=[MinValueValidator(1),]
+        validators=[MinValueValidator(1), MaxValueValidator(21),]
     )
 
     class Meta:
