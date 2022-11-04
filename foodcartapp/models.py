@@ -6,23 +6,23 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 class Restaurant(models.Model):
     name = models.CharField(
-        'название',
+        "название",
         max_length=50
     )
     address = models.CharField(
-        'адрес',
+        "адрес",
         max_length=100,
         blank=True,
     )
     contact_phone = models.CharField(
-        'контактный телефон',
+        "контактный телефон",
         max_length=50,
         blank=True,
     )
 
     class Meta:
-        verbose_name = 'ресторан'
-        verbose_name_plural = 'рестораны'
+        verbose_name = "ресторан"
+        verbose_name_plural = "рестораны"
 
     def __str__(self):
         return self.name
@@ -33,54 +33,51 @@ class ProductQuerySet(models.QuerySet):
         products = (
             RestaurantMenuItem.objects
             .filter(availability=True)
-            .values_list('product')
+            .values_list("product")
         )
         return self.filter(pk__in=products)
 
 
 class ProductCategory(models.Model):
     name = models.CharField(
-        'название',
+        "название",
         max_length=50
     )
 
     class Meta:
-        verbose_name = 'категория товаров'
-        verbose_name_plural = 'категории товаров'
+        verbose_name = "категория товаров"
+        verbose_name_plural = "категории товаров"
 
     def __str__(self):
         return self.name
 
 
 class Product(models.Model):
-    name = models.CharField(
-        'название',
-        max_length=50
-    )
+    name = models.CharField("название", max_length=50)
+
     category = models.ForeignKey(
         ProductCategory,
-        verbose_name='категория',
-        related_name='products',
+        verbose_name="категория",
+        related_name="products",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
     price = models.DecimalField(
-        'цена',
+        "цена",
         max_digits=8,
         decimal_places=2,
         validators=[MinValueValidator(0)]
     )
-    image = models.ImageField(
-        'картинка'
-    )
+    image = models.ImageField("картинка")
+
     special_status = models.BooleanField(
-        'спец.предложение',
+        "спец.предложение",
         default=False,
         db_index=True,
     )
     description = models.TextField(
-        'описание',
+        "описание",
         max_length=200,
         blank=True,
     )
@@ -157,18 +154,22 @@ class OrderItem(models.Model):
         verbose_name="заказ",
         on_delete=models.CASCADE
     )
-
     product = models.ForeignKey(
         Product,
         related_name="order_products",
         verbose_name="товар в заказе",        
         on_delete=models.CASCADE
     )
-
     quantity = models.PositiveIntegerField(
         "количество",
         default=1,
         validators=[MinValueValidator(1), MaxValueValidator(21),]
+    )
+    price = models.DecimalField(
+        "цена",
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
     )
 
     class Meta:
