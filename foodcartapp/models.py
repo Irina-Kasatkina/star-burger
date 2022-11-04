@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F, Sum
 from django.core.validators import MinValueValidator, MaxValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -97,49 +98,54 @@ class Product(models.Model):
 class RestaurantMenuItem(models.Model):
     restaurant = models.ForeignKey(
         Restaurant,
-        related_name='menu_items',
+        related_name="menu_items",
         verbose_name="ресторан",
         on_delete=models.CASCADE,
     )
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
-        related_name='menu_items',
-        verbose_name='продукт',
+        related_name="menu_items",
+        verbose_name="продукт",
     )
     availability = models.BooleanField(
-        'в продаже',
+        "в продаже",
         default=True,
         db_index=True
     )
 
     class Meta:
-        verbose_name = 'пункт меню ресторана'
-        verbose_name_plural = 'пункты меню ресторана'
-        unique_together = [
-            ['restaurant', 'product']
-        ]
+        verbose_name = "пункт меню ресторана"
+        verbose_name_plural = "пункты меню ресторана"
+        unique_together = [["restaurant", "product"]]
 
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
 
 
+class OrderQuerySet(models.QuerySet):
+    def with_cost(self):
+        return (self.annotate(cost=Sum(F("products__quantity")*F("products__product__price"))).order_by("pk"))
+
+
 class Order(models.Model):
     """Заказ."""
 
-    created = models.DateTimeField('время создания', auto_now_add=True, db_index=True)
-    firstname = models.CharField('имя', max_length=255)
-    lastname = models.CharField('фамилия', max_length=255, db_index=True)
-    phonenumber = PhoneNumberField('телефон', max_length=255, db_index=True)
-    address = models.CharField('адрес', max_length=255)
+    created = models.DateTimeField("время создания", auto_now_add=True, db_index=True)
+    firstname = models.CharField("имя", max_length=255)
+    lastname = models.CharField("фамилия", max_length=255, db_index=True)
+    phonenumber = PhoneNumberField("телефон", max_length=255, db_index=True)
+    address = models.CharField("адрес", max_length=255)
+
+    objects = OrderQuerySet.as_manager()
 
     class Meta:
-        ordering = ['-created']
-        verbose_name = 'заказ'
-        verbose_name_plural = 'заказы'
+        ordering = ["-created"]
+        verbose_name = "заказ"
+        verbose_name_plural = "заказы"
 
     def __str__(self):
-        return f'{self.id}. {self.created} {self.firstname} {self.lastname}, телефон {self.phonenumber}'
+        return f"{self.id}. {self.created} {self.firstname} {self.lastname}, телефон {self.phonenumber}"
 
 
 class OrderItem(models.Model):
@@ -147,24 +153,24 @@ class OrderItem(models.Model):
 
     order = models.ForeignKey(
         Order,
-        related_name='products',
-        verbose_name='заказ',
+        related_name="products",
+        verbose_name="заказ",
         on_delete=models.CASCADE
     )
 
     product = models.ForeignKey(
         Product,
-        related_name='order_products',
-        verbose_name='товар в заказе',        
+        related_name="order_products",
+        verbose_name="товар в заказе",        
         on_delete=models.CASCADE
     )
 
     quantity = models.PositiveIntegerField(
-        'количество',
+        "количество",
         default=1,
         validators=[MinValueValidator(1), MaxValueValidator(21),]
     )
 
     class Meta:
-        verbose_name = 'элемент заказа'
-        verbose_name_plural = 'элементы заказа'
+        verbose_name = "элемент заказа"
+        verbose_name_plural = "элементы заказа"
