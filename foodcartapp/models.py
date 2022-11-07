@@ -146,6 +146,8 @@ class Order(models.Model):
         db_index=True,
     )
     created = models.DateTimeField("время создания", auto_now_add=True, db_index=True)
+    call_datetime = models.DateTimeField("время звонка", null=True, blank=True, db_index=True)
+    delivery_datetime = models.DateTimeField("время доставки", null=True, blank=True, db_index=True)
     firstname = models.CharField("имя", max_length=255)
     lastname = models.CharField("фамилия", max_length=255, db_index=True)
     phonenumber = PhoneNumberField("телефон", max_length=255, db_index=True)
