@@ -128,16 +128,24 @@ class OrderQuerySet(models.QuerySet):
 class Order(models.Model):
     """Заказ."""
 
-    RAW = 'RW'
-    UNASSEMBLED = 'UA'
-    UNDELIVERED = 'UD'
-    COMPLETED = 'CM'
+    RAW = "RW"
+    UNASSEMBLED = "UA"
+    UNDELIVERED = "UD"
+    COMPLETED = "CM"
     ORDER_STATUSES = [
-        (RAW, 'Не обработан'),
-        (UNASSEMBLED, 'Не собран'),
-        (UNDELIVERED, 'Не доставлен'),
-        (COMPLETED, 'Выполнен'),
+        (RAW, "Не обработан"),
+        (UNASSEMBLED, "Не собран"),
+        (UNDELIVERED, "Не доставлен"),
+        (COMPLETED, "Выполнен"),
     ]
+
+    CASH = "CH"
+    ONLINE = "ON"
+    PAYMENT_METHODS = [
+        (CASH, "Наличкой"),
+        (ONLINE, "На сайте"),
+    ]
+
     status = models.CharField(
         'статус',
         max_length=2,
@@ -146,6 +154,13 @@ class Order(models.Model):
         db_index=True,
     )
     created = models.DateTimeField("время создания", auto_now_add=True, db_index=True)
+    payment = models.CharField(
+        'способ оплаты',
+        max_length=2,
+        choices=PAYMENT_METHODS,
+        default=CASH,
+        db_index=True,        
+    )
     call_datetime = models.DateTimeField("время звонка", null=True, blank=True, db_index=True)
     delivery_datetime = models.DateTimeField("время доставки", null=True, blank=True, db_index=True)
     firstname = models.CharField("имя", max_length=255)
