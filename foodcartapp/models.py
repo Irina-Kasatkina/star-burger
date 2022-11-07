@@ -128,29 +128,29 @@ class OrderQuerySet(models.QuerySet):
 class Order(models.Model):
     """Заказ."""
 
-    RAW = "RW"
-    UNASSEMBLED = "UA"
-    UNDELIVERED = "UD"
-    COMPLETED = "CM"
+    UNWATCHED = "1"
+    COOKING = "2"
+    DELIVERING = "3"
+    COMPLETED = "4"
     ORDER_STATUSES = [
-        (RAW, "Не обработан"),
-        (UNASSEMBLED, "Не собран"),
-        (UNDELIVERED, "Не доставлен"),
+        (UNWATCHED, "Необработанный"),
+        (COOKING, "Готовится"),
+        (DELIVERING, "Доставляется"),
         (COMPLETED, "Выполнен"),
     ]
 
     CASH = "CH"
     ONLINE = "ON"
     PAYMENT_METHODS = [
-        (CASH, "Наличкой"),
-        (ONLINE, "На сайте"),
+        (CASH, "Наличностью"),
+        (ONLINE, "Электронно"),
     ]
 
     status = models.CharField(
         'статус',
         max_length=2,
         choices=ORDER_STATUSES,
-        default=RAW,
+        default=UNWATCHED,
         db_index=True,
     )
     created = models.DateTimeField("время создания", auto_now_add=True, db_index=True)
@@ -168,6 +168,15 @@ class Order(models.Model):
     phonenumber = PhoneNumberField("телефон", max_length=255, db_index=True)
     address = models.CharField("адрес", max_length=255)
     comment = models.TextField("комментарий", default="", blank=True)
+
+    restaurant = models.OneToOneField(
+        Restaurant,
+        related_name="orders",
+        verbose_name="какой ресторан готовит",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+    )
 
     objects = OrderQuerySet.as_manager()
 
@@ -187,18 +196,18 @@ class OrderItem(models.Model):
         Order,
         related_name="items",
         verbose_name="заказ",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     product = models.ForeignKey(
         Product,
         related_name="order_items",
         verbose_name="товар в заказе",        
-        on_delete=models.CASCADE
+        on_delete=models.PROTECT,
     )
     quantity = models.PositiveIntegerField(
         "количество",
         default=1,
-        validators=[MinValueValidator(1), MaxValueValidator(21),]
+        validators=[MinValueValidator(1), MaxValueValidator(21),],
     )
     price = models.DecimalField(
         "цена",

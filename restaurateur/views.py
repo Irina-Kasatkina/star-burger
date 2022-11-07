@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 
-from foodcartapp.models import Order, Product, Restaurant
+from foodcartapp.models import Order, OrderItem, Product, Restaurant, RestaurantMenuItem
 
 
 class Login(forms.Form):
@@ -106,22 +106,57 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url="restaurateur:login")
 def view_orders(request):
-    orders = Order.objects.incomplete_with_cost()
-    orders_for_page = [
-        {
-            "id": order.id,
-            "status": order.get_status_display(),
-            "payment": order.get_payment_display(),
-            "cost": order.cost,
-            "lastname": order.lastname,
-            "firstname": order.firstname,
-            "phonenumber": order.phonenumber,
-            "address": order.address,
-        }
-        for order in orders
-    ]
+    orders_items = OrderItem.objects.select_related("order", "product").exclude(order__status="CM").order_by("order__status", "order__id")
+    restaurants_menu_items = RestaurantMenuItem.objects.filter(availability=True).select_related("product", "restaurant")
+
+    orders_for_page = []
+    order = order_restaurants = None    
+    for order_item in orders_items:
+        if not order or order_item.order.id != order.id:
+            if order:
+                orders_for_page.append(serialize_order(order, order_cost, order_restaurants))
+
+            order = order_item.order
+            order_cost = order_item.price * order_item.quantity
+            order_restaurants = get_order_item_restaurants(restaurants_menu_items, order_item)
+            # print(order_restaurants)
+        else:
+            order_cost += order_item.price * order_item.quantity
+            order_restaurants = order_restaurants & get_order_item_restaurants(restaurants_menu_items, order_item)
+
+    if order:
+        orders_for_page.append(serialize_order(order, order_cost, order_restaurants))
+    # print(orders_for_page)
+
     return render(
         request,
         template_name="order_items.html",
         context={"orders": orders_for_page}
     )
+
+
+def serialize_order(order, order_cost, restaurants_names):
+    return {
+        "id": order.id,
+        "status": order.get_status_display(),
+        "payment": order.get_payment_display(),
+        "lastname": order.lastname,
+        "firstname": order.firstname,
+        "phonenumber": order.phonenumber,
+        "address": order.address,
+        "comment": order.comment,
+        "cost": order_cost,
+        "restaurant": order.restaurant.name if order.restaurant else "",
+        "restaurants": sorted([restaurant_name for restaurant_name in restaurants_names])
+    }
+
+
+def get_order_item_restaurants(restaurants_menu_items, order_item):
+    if order_item.order.restaurant:
+        return set()
+
+    return {
+        restaurants_menu_item.restaurant.name
+        for restaurants_menu_item in restaurants_menu_items
+        if restaurants_menu_item.product.id == order_item.product.id
+    }
