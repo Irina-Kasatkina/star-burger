@@ -106,9 +106,21 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url="restaurateur:login")
 def view_orders(request):
-    orders = Order.objects.with_cost()
+    orders = Order.objects.incomplete_with_cost()
+    orders_for_page = [
+        {
+            "id": order.id,
+            "status": order.get_status_display(),
+            "cost": order.cost,
+            "lastname": order.lastname,
+            "firstname": order.firstname,
+            "phonenumber": order.phonenumber,
+            "address": order.address,
+        }
+        for order in orders
+    ]
     return render(
         request,
         template_name="order_items.html",
-        context={"orders": orders}
+        context={"orders": orders_for_page}
     )

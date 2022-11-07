@@ -121,13 +121,30 @@ class RestaurantMenuItem(models.Model):
 
 
 class OrderQuerySet(models.QuerySet):
-    def with_cost(self):
-        return (self.annotate(cost=Sum(F("items__quantity")*F("items__price"))).order_by("pk"))
+    def incomplete_with_cost(self):
+        return (self.exclude(status='CM').annotate(cost=Sum(F("items__quantity")*F("items__price"))).order_by("pk"))
 
 
 class Order(models.Model):
     """Заказ."""
 
+    RAW = 'RW'
+    UNASSEMBLED = 'UA'
+    UNDELIVERED = 'UD'
+    COMPLETED = 'CM'
+    ORDER_STATUSES = [
+        (RAW, 'Не обработан'),
+        (UNASSEMBLED, 'Не собран'),
+        (UNDELIVERED, 'Не доставлен'),
+        (COMPLETED, 'Выполнен'),
+    ]
+    status = models.CharField(
+        'статус',
+        max_length=2,
+        choices=ORDER_STATUSES,
+        default=RAW,
+        db_index=True,
+    )
     created = models.DateTimeField("время создания", auto_now_add=True, db_index=True)
     firstname = models.CharField("имя", max_length=255)
     lastname = models.CharField("фамилия", max_length=255, db_index=True)
