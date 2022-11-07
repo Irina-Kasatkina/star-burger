@@ -150,6 +150,7 @@ class Order(models.Model):
     lastname = models.CharField("фамилия", max_length=255, db_index=True)
     phonenumber = PhoneNumberField("телефон", max_length=255, db_index=True)
     address = models.CharField("адрес", max_length=255)
+    comment = models.TextField("комментарий", default="", blank=True)
 
     objects = OrderQuerySet.as_manager()
 
