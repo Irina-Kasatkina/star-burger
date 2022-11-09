@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import F, Sum
 from django.core.validators import MinValueValidator, MaxValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -32,8 +31,8 @@ class ProductQuerySet(models.QuerySet):
     def available(self):
         products = (
             RestaurantMenuItem.objects
-            .filter(availability=True)
-            .values_list("product")
+                              .filter(availability=True)
+                              .values_list("product")
         )
         return self.filter(pk__in=products)
 
@@ -120,11 +119,6 @@ class RestaurantMenuItem(models.Model):
         return f"{self.restaurant.name} - {self.product.name}"
 
 
-class OrderQuerySet(models.QuerySet):
-    def incomplete_with_cost(self):
-        return (self.exclude(status='CM').annotate(cost=Sum(F("items__quantity")*F("items__price"))).order_by("pk"))
-
-
 class Order(models.Model):
     """Заказ."""
 
@@ -159,7 +153,7 @@ class Order(models.Model):
         max_length=2,
         choices=PAYMENT_METHODS,
         default=CASH,
-        db_index=True,        
+        db_index=True,
     )
     call_datetime = models.DateTimeField("время звонка", null=True, blank=True, db_index=True)
     delivery_datetime = models.DateTimeField("время доставки", null=True, blank=True, db_index=True)
@@ -177,8 +171,6 @@ class Order(models.Model):
         blank=True,
         on_delete=models.PROTECT,
     )
-
-    objects = OrderQuerySet.as_manager()
 
     class Meta:
         ordering = ["-created"]
@@ -201,13 +193,13 @@ class OrderItem(models.Model):
     product = models.ForeignKey(
         Product,
         related_name="order_items",
-        verbose_name="товар в заказе",        
+        verbose_name="товар в заказе",
         on_delete=models.PROTECT,
     )
     quantity = models.PositiveIntegerField(
         "количество",
         default=1,
-        validators=[MinValueValidator(1), MaxValueValidator(21),],
+        validators=[MinValueValidator(1), MaxValueValidator(21)],
     )
     price = models.DecimalField(
         "цена",

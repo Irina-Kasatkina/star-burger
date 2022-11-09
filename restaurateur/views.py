@@ -117,9 +117,9 @@ def view_orders(request):
     )
     orders_items = (
         OrderItem.objects
-                 .prefetch_related('order', 'product')
-                 .exclude(order__status='CM')
-                 .order_by('order__status', 'order__id')
+        .prefetch_related('order', 'product')
+        .exclude(order__status='CM')
+        .order_by('order__status', 'order__id')
     )
 
     locations = get_locations(restaurants_menu_items, orders_items)
@@ -178,7 +178,7 @@ def get_restaurants_definitions(address, restaurants, locations):
 def get_or_create_coordinates(address, locations):
     for location in locations:
         if location.address == address:
-           return location.lat, location.lon
+            return location.lat, location.lon
 
     lat, lon = fetch_coordinates_from_yandex_api(address)
     if lat and lon:
@@ -186,7 +186,7 @@ def get_or_create_coordinates(address, locations):
     return lat, lon
 
 
-def fetch_coordinates_from_yandex_api(address):    
+def fetch_coordinates_from_yandex_api(address):
     base_url = 'https://geocode-maps.yandex.ru/1.x'
     response = requests.get(base_url, params={
         'geocode': address,
