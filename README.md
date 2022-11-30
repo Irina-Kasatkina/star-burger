@@ -20,19 +20,19 @@
 ### Как собрать бэкенд
 
 Скачайте код:
-```sh
+```
 git clone https://github.com/devmanorg/star-burger.git
 ```
 
 Перейдите в каталог проекта:
-```sh
+```
 cd star-burger
 ```
 
-[Установите Python](https://www.python.org/), если этого ещё не сделали.
+[Установите Python](https://www.python.org/), если вы этого ещё не сделали.
 
 Проверьте, что `python` установлен и корректно настроен. Запустите его в командной строке:
-```sh
+```
 python --version
 ```
 **Важно!** Версия Python должна быть не ниже 3.6.
@@ -40,7 +40,7 @@ python --version
 Возможно, вместо команды `python` здесь и в остальных инструкциях этого README придётся использовать `python3`. Зависит это от операционной системы и от того, установлен ли у вас Python старой второй версии. 
 
 В каталоге проекта создайте виртуальное окружение:
-```sh
+```
 python -m venv venv
 ```
 Активируйте его. На разных операционных системах это делается разными командами:
@@ -50,28 +50,44 @@ python -m venv venv
 
 
 Установите зависимости в виртуальное окружение:
-```sh
+```
 pip install -r requirements.txt
 ```
 
-Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
-```sh
+Создайте файл `.env` в каталоге `star_burger/` и запишите туда следующие переменные окружения в формате `ПЕРЕМЕННАЯ=значение`:
+- `ALLOWED_HOSTS`- разрешённые хосты, см. [документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts).
+- `DATABASE_ENGINE` - движок базы данных, например: `django.db.backends.sqlite3`.
+- `DATABASE_NAME` - имя базы данных, например: `places.sqlite3`.
+- `DEBUG` - дебаг-режим (поставьте `True`, чтобы увидеть отладочную информацию в случае ошибки).
+- `SECRET_KEY` - секретный ключ проекта.
+- `YANDEX_GEO_API_KEY` - ключ API Яндекс-геокодера, получите его в [кабинете разработчика](https://developer.tech.yandex.ru/services/) (самые важные ответы на вопросы: "В открытом доступе", "В бесплатном", "Буду отображать данные на карте").
+
+Пример файла `.env`:
+```
+#
+ALLOWED_HOSTS=127.0.0.1,localhost
+DATABASE_ENGINE=django.db.backends.sqlite3
+DATABASE_NAME=db.sqlite3
+DEBUG=True
 SECRET_KEY=django-insecure-0if40nf4nf93n4
+YANDEX_GEO_API_KEY=kjcfjkk796d7fi7i46xnn8HJFBf465gaafs5213
 ```
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
 
-```sh
+```
 python manage.py migrate
 ```
 
 Запустите сервер:
 
-```sh
+```
 python manage.py runserver
 ```
 
 Откройте сайт в браузере по адресу [http://127.0.0.1:8000/](http://127.0.0.1:8000/). Если вы увидели пустую белую страницу, то не пугайтесь, выдохните. Просто фронтенд пока ещё не собран. Переходите к следующему разделу README.
+
+После того, как будет собран проект, интерфейс менеджера будет доступен по адресу [http://127.0.0.1:8000/manager](http://127.0.0.1:8000/manager), а админка — по адресу [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin).
 
 ### Собрать фронтенд
 
@@ -81,7 +97,7 @@ python manage.py runserver
 
 Проверьте, что Node.js и его пакетный менеджер корректно установлены. Если всё исправно, то терминал выведет их версии:
 
-```sh
+```
 nodejs --version
 # v12.18.2
 # Если ошибка, попробуйте node:
@@ -96,7 +112,7 @@ npm --version
 
 Перейдите в каталог проекта и установите пакеты Node.js:
 
-```sh
+```
 cd star-burger
 npm ci --dev
 ```
@@ -107,13 +123,13 @@ npm ci --dev
 
 Теперь запустите сборку фронтенда и не выключайте. Parcel будет работать в фоне и следить за изменениями в JS-коде:
 
-```sh
+```
 ./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
 ```
 
 Если вы на Windows, то вам нужна та же команда, только с другими слешами в путях:
 
-```sh
+```
 .\node_modules\.bin\parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
 ```
 
@@ -127,7 +143,7 @@ Parcel будет следить за файлами в каталоге `bundle
 
 Теперь если зайти на страницу  [http://127.0.0.1:8000/](http://127.0.0.1:8000/), то вместо пустой страницы вы увидите:
 
-![](https://dvmn.org/filer/canonical/1594651900/687/)
+![](#)
 
 Каталог `bundles` в репозитории особенный — туда Parcel складывает результаты своей работы. Эта директория предназначена исключительно для результатов сборки фронтенда и потому исключёна из репозитория с помощью `.gitignore`.
 
@@ -138,15 +154,18 @@ Parcel будет следить за файлами в каталоге `bundle
 
 Собрать фронтенд:
 
-```sh
+```
 ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 ```
 
 Настроить бэкенд: создать файл `.env` в каталоге `star_burger/` со следующими настройками:
 
+- `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
+- `DATABASE_ENGINE` - движок базы данных.
+- `DATABASE_NAME` - имя базы данных.
 - `DEBUG` — дебаг-режим. Поставьте `False`.
 - `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
-- `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
+- `YANDEX_GEO_API_KEY` - ключ API Яндекс-геокодера, см. [документацию](https://developer.tech.yandex.ru/services/)
 
 ## Цели проекта
 

@@ -27,7 +27,7 @@
       <tr>
         <td>{{ order.id }}</td>
         <td>{{ order.status }}</td>
-        <td>{{ order.payment }}</td>
+        <td>{{ order.payment_method }}</td>
         <td>{{ order.cost }} руб.</td>
         <td>{{ order.lastname }} {{ order.firstname }}</td>
         <td>{{ order.phonenumber }}</td>
@@ -36,8 +36,8 @@
         <td>
           <details style="min-width=7em">
             <summary style="display: list-item; cursor: pointer">Детали</summary>
-            {% if order.restaurant %}
-              Готовит {{ order.restaurant }}
+            {% if order.cooking_restaurant %}
+              Готовит {{ order.cooking_restaurant }}
             {% else %}
               Может быть приготовлен ресторанами:<br>
               <ul>

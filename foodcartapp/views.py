@@ -4,6 +4,7 @@ import phonenumbers
 from django.db import transaction
 from django.http import JsonResponse
 from django.templatetags.static import static
+from geopy import distance
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
@@ -12,6 +13,7 @@ from rest_framework.serializers import ValidationError
 from .models import Order
 from .models import OrderItem
 from .models import Product
+from geocoder.views import get_or_create_coordinates
 
 
 def banners_list_api(request):
@@ -89,7 +91,7 @@ class OrderSerializer(ModelSerializer):
     def validate_phonenumber(self, value):
         value = phonenumbers.parse(value, 'RU')
         if not phonenumbers.is_valid_number(value):
-            raise ValidationError("Введен некорректный номер телефона.")
+            raise ValidationError("Введён некорректный номер телефона.")
         return value
 
 
@@ -114,3 +116,19 @@ def register_order(request):
     OrderItem.objects.bulk_create(products)
 
     return Response(OrderSerializer(instance=order).data)
+
+
+def get_restaurants_definitions(address, restaurants, locations):
+    address_coordinates = get_or_create_coordinates(address, locations)
+
+    restaurants_with_distances = []
+    for restaurant in restaurants:
+        restaurant_coordinates = get_or_create_coordinates(restaurant.address, locations)
+        restaurant_distance = round(distance.distance(restaurant_coordinates, address_coordinates).km, 2)
+        restaurants_with_distances.append((restaurant.name, restaurant_distance))
+
+    restaurants_with_distances.sort(key=lambda x: x[1])
+    return [
+        f'{restaurant_name} - {restaurant_distance} км'
+        for restaurant_name, restaurant_distance in restaurants_with_distances
+    ]
