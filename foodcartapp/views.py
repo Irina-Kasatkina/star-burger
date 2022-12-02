@@ -13,7 +13,7 @@ from rest_framework.serializers import ValidationError
 from .models import Order
 from .models import OrderItem
 from .models import Product
-from geocoder.views import get_or_create_coordinates
+from geocoder.locations_coordinates import get_or_create_coordinates
 
 
 def banners_list_api(request):
@@ -119,8 +119,11 @@ def register_order(request):
 
 
 def get_restaurants_definitions(address, restaurants, locations):
-    address_coordinates = get_or_create_coordinates(address, locations)
+    lat, lon = get_or_create_coordinates(address, locations)
+    if not lat or not lon:
+        return ['- (адрес клиента не распознан)']
 
+    address_coordinates = [lat, lon]
     restaurants_with_distances = []
     for restaurant in restaurants:
         restaurant_coordinates = get_or_create_coordinates(restaurant.address, locations)
