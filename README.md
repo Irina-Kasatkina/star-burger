@@ -55,12 +55,14 @@ pip install -r requirements.txt
 ```
 
 Создайте файл `.env` в каталоге `star_burger/` и запишите туда следующие переменные окружения в формате `ПЕРЕМЕННАЯ=значение`:
-- `ALLOWED_HOSTS`- разрешённые хосты, см. [документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts).
-- `DATABASE_ENGINE` - движок базы данных, например: `django.db.backends.sqlite3`.
-- `DATABASE_NAME` - имя базы данных, например: `places.sqlite3`.
-- `DEBUG` - дебаг-режим (поставьте `True`, чтобы увидеть отладочную информацию в случае ошибки).
+- `ALLOWED_HOSTS`- разрешённые хосты, см. [документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts); по умолчанию `['127.0.0.1', 'localhost']`.
+- `DATABASE_ENGINE` - движок базы данных, по умолчанию `django.db.backends.sqlite3`.
+- `DATABASE_NAME` - имя базы данных; по умолчанию `db.sqlite3`.
+- `DEBUG` - дебаг-режим; по умолчанию `True`, то есть в случае ошибки в браузер будет выводиться отладочня информация.
 - `SECRET_KEY` - секретный ключ проекта.
 - `YANDEX_GEO_API_KEY` - ключ API Яндекс-геокодера, получите его в [кабинете разработчика](https://developer.tech.yandex.ru/services/) (самые важные ответы на вопросы: "В открытом доступе", "В бесплатном", "Буду отображать данные на карте").
+- `ROLLBAR_ACCESS_TOKEN` - токен доступа к [Rollbar](rollbar.com) для отслеживания возникающих на сайте ошибок.
+- `ROLLBAR_ENVIRONMENT` - название окружения сайта для [Rollbar](rollbar.com),; по умолчанию `development`.
 
 Пример файла `.env`:
 ```
@@ -71,6 +73,8 @@ DATABASE_NAME=db.sqlite3
 DEBUG=True
 SECRET_KEY=django-insecure-0if40nf4nf93n4
 YANDEX_GEO_API_KEY=kjcfjkk796d7fi7i46xnn8HJFBf465gaafs5213
+ROLLBAR_ACCESS_TOKEN =438ghjcn6c6o67897917
+ROLLBAR_ENVIRONMENT=development
 ```
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
@@ -166,6 +170,8 @@ Parcel будет следить за файлами в каталоге `bundle
 - `DEBUG` — дебаг-режим. Поставьте `False`.
 - `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
 - `YANDEX_GEO_API_KEY` - ключ API Яндекс-геокодера, см. [документацию](https://developer.tech.yandex.ru/services/)
+- `ROLLBAR_ACCESS_TOKEN` - токен доступа к [Rollbar](rollbar.com) для отслеживания возникающих на сайте ошибок.
+- `ROLLBAR_ENVIRONMENT` - название окружения сайта для [Rollbar](rollbar.com); поставьте `production` или другое, по которому вам будет удобно фильтровать на [Rollbar](rollbar.com) ошибки от конкретной инсталляции сайта.
 
 ## Цели проекта
 
