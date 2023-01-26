@@ -183,6 +183,15 @@ Parcel будет следить за файлами в каталоге `bundle
 - `ROLLBAR_ACCESS_TOKEN` - токен доступа к [Rollbar](rollbar.com) для отслеживания возникающих на сайте ошибок.
 - `ROLLBAR_ENVIRONMENT` - название окружения сайта для [Rollbar](rollbar.com); поставьте `production` или другое, по которому вам будет удобно фильтровать на [Rollbar](rollbar.com) ошибки от конкретной инсталляции сайта.
 
+## Как быстро деплоить на сервере
+
+После каждого изменения в проекте сделайте `commit` и `push` на github.
+Затем зайдите на сервер через ssh и выполните следующие команды:
+```
+cd /opt/star-burger
+.deploy_starburger.sh
+```
+
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).
