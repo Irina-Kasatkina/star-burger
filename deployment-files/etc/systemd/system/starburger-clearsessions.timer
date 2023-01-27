@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for Starburger clearsessions
+
+[Timer]
+OnBootSec=300
+OnUnitActiveSec=1w
+
+[Install]
+WantedBy=multi-user.target
